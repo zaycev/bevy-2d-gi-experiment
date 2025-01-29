@@ -1,4 +1,4 @@
-use bevy::core_pipeline::bloom::BloomSettings;
+use bevy::core_pipeline::bloom::Bloom;
 use bevy::pbr::{MAX_CASCADES_PER_LIGHT, MAX_DIRECTIONAL_LIGHTS};
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
@@ -15,9 +15,8 @@ use bevy::render::render_resource::{
     TextureFormat,
     TextureUsages,
 };
-use bevy::render::texture::BevyDefault;
 use bevy::render::view::RenderLayers;
-use bevy::sprite::{Material2d, Material2dKey, MaterialMesh2dBundle};
+use bevy::sprite::{Material2d, Material2dKey};
 
 use crate::gi::constants::{POST_PROCESSING_MATERIAL, POST_PROCESSING_RECT};
 use crate::gi::pipeline::GiTargetsWrapper;
@@ -211,29 +210,21 @@ pub fn setup_post_processing_camera(
 
     commands.spawn((
         PostProcessingQuad,
-        MaterialMesh2dBundle {
-            mesh: POST_PROCESSING_RECT.clone().into(),
-            material: POST_PROCESSING_MATERIAL.clone(),
-            transform: Transform {
-                translation: Vec3::new(0.0, 0.0, 1.5),
-                ..default()
-            },
-            ..default()
-        },
+        Mesh2d(POST_PROCESSING_RECT.clone().into()),
+        MeshMaterial2d(POST_PROCESSING_MATERIAL.clone()),
+        Transform::from_translation(Vec3::new(0.0, 0.0, 1.5)),
         layer.clone(),
     ));
 
     commands.spawn((
         Name::new("post_processing_camera"),
-        Camera2dBundle {
-            camera: Camera {
-                order: 1,
-                hdr: true,
-                ..default()
-            },
-            ..Camera2dBundle::default()
+        Camera2d, 
+        Camera{
+            order: 1,
+            hdr: true,
+            ..default()
         },
-        BloomSettings {
+        Bloom {
             intensity: 0.1,
             ..default()
         },
@@ -241,14 +232,8 @@ pub fn setup_post_processing_camera(
     ))
     .insert((
         PostProcessingQuad,
-        MaterialMesh2dBundle {
-            mesh: POST_PROCESSING_RECT.clone().into(),
-            material: POST_PROCESSING_MATERIAL.clone(),
-            transform: Transform {
-                translation: Vec3::new(0.0, 0.0, 1.5),
-                ..default()
-            },
-            ..default()
-        },
+        Mesh2d(POST_PROCESSING_RECT.clone().into()),
+        MeshMaterial2d(POST_PROCESSING_MATERIAL.clone()),
+        Transform::from_translation(Vec3::new(0.0, 0.0, 1.5)),
     ));
 }

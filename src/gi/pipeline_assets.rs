@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy::render::render_resource::{StorageBuffer, UniformBuffer};
 use bevy::render::renderer::{RenderDevice, RenderQueue};
 use bevy::render::Extract;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 
 use crate::gi::constants::GI_SCREEN_PROBE_SIZE;
 use crate::gi::resource::ComputedTargetSizes;
@@ -109,7 +109,7 @@ pub fn system_extract_pipeline_assets(
 
     {
         let light_sources = gpu_pipeline_assets.light_sources.get_mut();
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
         light_sources.count = 0;
         light_sources.data.clear();
         for (transform, light_source, hviz, vviz) in query_lights.iter() {
@@ -118,14 +118,14 @@ pub fn system_extract_pipeline_assets(
                 light_sources.data.push(GpuOmniLightSource::new(
                     OmniLightSource2D {
                         intensity: light_source.intensity
-                            + rng.gen_range(-1.0..1.0) * light_source.jitter_intensity,
+                            + rng.random_range(-1.0..1.0) * light_source.jitter_intensity,
                         ..*light_source
                     },
                     Vec2::new(
                         transform.translation().x
-                            + rng.gen_range(-1.0..1.0) * light_source.jitter_translation,
+                            + rng.random_range(-1.0..1.0) * light_source.jitter_translation,
                         transform.translation().y
-                            + rng.gen_range(-1.0..1.0) * light_source.jitter_translation,
+                            + rng.random_range(-1.0..1.0) * light_source.jitter_translation,
                     ),
                 ));
             }

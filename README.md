@@ -75,6 +75,13 @@ cargo run --example krypta
 
 - [ ] Add examples and HUD explaining how to use example.
 
+## Compatibility
+
+| bevy   | bevy_magic_light_2d |
+| ------ | ------------------- |
+| `0.15` | `0.9`               |
+| `0.14` | `0.8`               |
+
 ### License
 
 ```

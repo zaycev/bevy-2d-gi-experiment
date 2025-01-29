@@ -49,7 +49,8 @@ fn setup(mut commands: Commands, camera_targets: Res<CameraTargets>)
     let mut occluders = vec![];
     let occluder_entity = commands
         .spawn((
-            SpatialBundle::default(),
+            Transform::default(),
+            Visibility::default(),
             LightOccluder2D {
                 h_size: Vec2::new(80.0, 40.0),
             },
@@ -60,9 +61,9 @@ fn setup(mut commands: Commands, camera_targets: Res<CameraTargets>)
     occluders.push(occluder_entity);
 
     commands
-        .spawn(SpatialBundle::default())
+        .spawn((Visibility::default(), Transform::default()))
         .insert(Name::new("occluders"))
-        .push_children(&occluders);
+        .add_children(&occluders);
 
     // Add lights.
     let mut lights = vec![];
@@ -75,13 +76,10 @@ fn setup(mut commands: Commands, camera_targets: Res<CameraTargets>)
             return cmd
                 .spawn(Name::new(name))
                 .insert(light_source)
-                .insert(SpatialBundle {
-                    transform: Transform {
-                        translation: Vec3::new(x, y, 0.0),
-                        ..default()
-                    },
-                    ..default()
-                })
+                .insert((
+                    Visibility::default(),
+                    Transform::from_translation(Vec3::new(x, y, 0.0)),
+                ))
                 .id();
         };
 
@@ -111,17 +109,15 @@ fn setup(mut commands: Commands, camera_targets: Res<CameraTargets>)
         ));
     }
     commands
-        .spawn(SpatialBundle::default())
+        .spawn((Transform::default(), Visibility::default()))
         .insert(Name::new("lights"))
-        .push_children(&lights);
+        .add_children(&lights);
 
     commands.spawn((
-        Camera2dBundle {
-            camera: Camera {
-                hdr: true,
-                target: RenderTarget::Image(camera_targets.floor_target.clone()),
-                ..Default::default()
-            },
+        Camera2d,
+        Camera {
+            hdr: true,
+            target: RenderTarget::Image(camera_targets.floor_target.clone()),
             ..Default::default()
         },
         Name::new("main_camera"),

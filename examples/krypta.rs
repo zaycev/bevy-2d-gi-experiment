@@ -1,10 +1,9 @@
 use bevy::color::palettes;
+use bevy::image::{ImageFilterMode, ImageSamplerDescriptor};
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::render::camera::RenderTarget;
-use bevy::render::texture::{ImageFilterMode, ImageSamplerDescriptor};
 use bevy::render::view::RenderLayers;
-use bevy::sprite::MaterialMesh2dBundle;
 use bevy::window::PrimaryWindow;
 use bevy_inspector_egui::quick::ResourceInspectorPlugin;
 use bevy_magic_light_2d::gi::render_layer::ALL_LAYERS;
@@ -168,30 +167,29 @@ fn setup(
     let decorations_image = asset_server.load("art/atlas_decoration.png");
 
     // Spawn floor tiles.
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
     let mut floor_tiles = vec![];
     for (i, row) in walls_info.iter().enumerate() {
         for (j, _) in row.iter().enumerate() {
             let xy = get_block_translation(i, j);
             let z = get_floor_z(xy.y);
-            let id = rng.gen_range(0..(floor_atlas_cols * floor_atlas_rows));
+            let id = rng.random_range(0..(floor_atlas_cols * floor_atlas_rows));
 
             floor_tiles.push(
                 commands
                     .spawn((
-                        SpriteBundle {
-                            transform: Transform {
-                                translation: Vec3::new(xy.x, xy.y, z),
-                                scale: Vec2::splat(SPRITE_SCALE).extend(0.0),
-                                ..default()
-                            },
-                            texture: floor_image.clone(),
+                        Transform {
+                            translation: Vec3::new(xy.x, xy.y, z),
+                            scale: Vec2::splat(SPRITE_SCALE).extend(0.0),
                             ..default()
                         },
-                        TextureAtlas {
-                            layout: floor_atlas.clone(),
-                            index:  id as usize,
-                        },
+                        Sprite::from_atlas_image(
+                            floor_image.clone(),
+                            TextureAtlas {
+                                layout: floor_atlas.clone(),
+                                index:  id as usize,
+                            },
+                        ),
                     ))
                     .insert(RenderLayers::from_layers(CAMERA_LAYER_FLOOR))
                     .id(),
@@ -201,8 +199,8 @@ fn setup(
 
     commands
         .spawn(Name::new("floor_tiles"))
-        .insert(SpatialBundle::default())
-        .push_children(&floor_tiles);
+        .insert((Transform::default(), Visibility::default()))
+        .add_children(&floor_tiles);
 
     let maze_rows = walls_info.len() as i32;
     let maze_cols = walls_info[0].len() as i32;
@@ -309,19 +307,18 @@ fn setup(
                 walls.push(
                     commands
                         .spawn((
-                            SpriteBundle {
-                                transform: Transform {
-                                    translation: Vec3::new(xy.x, xy.y, z),
-                                    scale: Vec2::splat(SPRITE_SCALE).extend(0.0),
-                                    ..default()
-                                },
-                                texture: wall_image.clone(),
+                            Transform {
+                                translation: Vec3::new(xy.x, xy.y, z),
+                                scale: Vec2::splat(SPRITE_SCALE).extend(0.0),
                                 ..default()
                             },
-                            TextureAtlas {
-                                layout: wall_atlas.clone(),
-                                index:  id as usize,
-                            },
+                            Sprite::from_atlas_image(
+                                wall_image.clone(),
+                                TextureAtlas {
+                                    layout: wall_atlas.clone(),
+                                    index:  id as usize,
+                                },
+                            ),
                         ))
                         .insert(RenderLayers::from_layers(CAMERA_LAYER_WALLS))
                         .insert(occluder_data)
@@ -331,9 +328,9 @@ fn setup(
         }
     }
     commands
-        .spawn(SpatialBundle::default())
+        .spawn((Transform::default(), Visibility::default()))
         .insert(Name::new("walls"))
-        .push_children(&walls);
+        .add_children(&walls);
 
     // Add decorations.
     let mut decorations = vec![];
@@ -375,22 +372,20 @@ fn setup(
             decorations.push(
                 commands
                     .spawn((
-                        SpriteBundle {
-                            transform: Transform {
-                                translation: Vec3::new(x, y, get_object_z(y)),
-                                scale: Vec2::splat(4.0).extend(0.0),
-                                ..default()
-                            },
-                            sprite: Sprite {
-                                color: Color::srgb_u8(180, 180, 180),
-                                ..default()
-                            },
-                            texture: decorations_image.clone(),
+                        Visibility::default(),
+                        Transform {
+                            translation: Vec3::new(x, y, get_object_z(y)),
+                            scale: Vec2::splat(4.0).extend(0.0),
                             ..default()
                         },
-                        TextureAtlas {
-                            layout: texture_atlas_handle.clone(),
-                            index:  candle_rect_1,
+                        Sprite {
+                            color: Color::srgb_u8(180, 180, 180),
+                            image: decorations_image.clone(),
+                            texture_atlas: Some(TextureAtlas {
+                                layout: texture_atlas_handle.clone(),
+                                index:  candle_rect_1,
+                            }),
+                            ..default()
                         },
                     ))
                     .insert(RenderLayers::from_layers(CAMERA_LAYER_OBJECTS))
@@ -410,22 +405,20 @@ fn setup(
             decorations.push(
                 commands
                     .spawn((
-                        SpriteBundle {
-                            transform: Transform {
-                                translation: Vec3::new(x, y, get_object_z(y)),
-                                scale: Vec2::splat(4.0).extend(0.0),
-                                ..default()
-                            },
-                            sprite: Sprite {
-                                color: Color::srgb_u8(180, 180, 180),
-                                ..default()
-                            },
-                            texture: decorations_image.clone(),
+                        Visibility::default(),
+                        Transform {
+                            translation: Vec3::new(x, y, get_object_z(y)),
+                            scale: Vec2::splat(4.0).extend(0.0),
                             ..default()
                         },
-                        TextureAtlas {
-                            layout: texture_atlas_handle.clone(),
-                            index:  candle_rect_2,
+                        Sprite {
+                            color: Color::srgb_u8(180, 180, 180),
+                            texture_atlas: Some(TextureAtlas {
+                                layout: texture_atlas_handle.clone(),
+                                index:  candle_rect_2,
+                            }),
+                            image: decorations_image.clone(),
+                            ..default()
                         },
                     ))
                     .insert(RenderLayers::from_layers(CAMERA_LAYER_OBJECTS))
@@ -445,22 +438,21 @@ fn setup(
             decorations.push(
                 commands
                     .spawn((
-                        SpriteBundle {
-                            transform: Transform {
-                                translation: Vec3::new(x, y, get_object_z(y)),
-                                scale: Vec2::splat(4.0).extend(0.0),
-                                ..default()
-                            },
-                            sprite: Sprite {
-                                color: Color::srgb_u8(180, 180, 180),
-                                ..default()
-                            },
-                            texture: decorations_image.clone(),
+                        Visibility::default(),
+                        Transform {
+                            translation: Vec3::new(x, y, get_object_z(y)),
+                            scale: Vec2::splat(4.0).extend(0.0),
                             ..default()
                         },
-                        TextureAtlas {
-                            layout: texture_atlas_handle.clone(),
-                            index:  candle_rect_3,
+                        Sprite {
+                            color: Color::srgb_u8(180, 180, 180),
+                            texture_atlas: Some(TextureAtlas {
+                                layout: texture_atlas_handle.clone(),
+                                index:  candle_rect_3,
+                            }),
+                            image: decorations_image.clone(),
+
+                            ..default()
                         },
                     ))
                     .insert(RenderLayers::from_layers(CAMERA_LAYER_OBJECTS))
@@ -480,22 +472,20 @@ fn setup(
             decorations.push(
                 commands
                     .spawn((
-                        SpriteBundle {
-                            transform: Transform {
-                                translation: Vec3::new(x, y, get_object_z(y)),
-                                scale: Vec2::splat(4.0).extend(0.0),
-                                ..default()
-                            },
-                            sprite: Sprite {
-                                color: Color::srgb_u8(180, 180, 180),
-                                ..default()
-                            },
-                            texture: decorations_image.clone(),
+                        Visibility::default(),
+                        Transform {
+                            translation: Vec3::new(x, y, get_object_z(y)),
+                            scale: Vec2::splat(4.0).extend(0.0),
                             ..default()
                         },
-                        TextureAtlas {
-                            layout: texture_atlas_handle.clone(),
-                            index:  candle_rect_4,
+                        Sprite {
+                            color: Color::srgb_u8(180, 180, 180),
+                            image: decorations_image.clone(),
+                            texture_atlas: Some(TextureAtlas {
+                                layout: texture_atlas_handle.clone(),
+                                index:  candle_rect_4,
+                            }),
+                            ..default()
                         },
                     ))
                     .insert(RenderLayers::from_layers(CAMERA_LAYER_OBJECTS))
@@ -514,22 +504,19 @@ fn setup(
             decorations.push(
                 commands
                     .spawn((
-                        SpriteBundle {
-                            transform: Transform {
-                                translation: Vec3::new(x, y, get_object_z(y)),
-                                scale: Vec2::splat(4.0).extend(0.0),
-                                ..default()
-                            },
-                            sprite: Sprite {
-                                color: Color::srgb_u8(255, 255, 255),
-                                ..default()
-                            },
-                            texture: decorations_image.clone(),
+                        Transform {
+                            translation: Vec3::new(x, y, get_object_z(y)),
+                            scale: Vec2::splat(4.0).extend(0.0),
                             ..default()
                         },
-                        TextureAtlas {
-                            layout: texture_atlas_handle.clone(),
-                            index:  tomb_rect_1,
+                        Sprite {
+                            color: Color::srgb_u8(255, 255, 255),
+                            texture_atlas: Some(TextureAtlas {
+                                layout: texture_atlas_handle.clone(),
+                                index:  tomb_rect_1,
+                            }),
+                            image: decorations_image.clone(),
+                            ..default()
                         },
                     ))
                     .insert(RenderLayers::from_layers(CAMERA_LAYER_OBJECTS))
@@ -548,22 +535,19 @@ fn setup(
             decorations.push(
                 commands
                     .spawn((
-                        SpriteBundle {
-                            transform: Transform {
-                                translation: Vec3::new(x, y, get_object_z(y)),
-                                scale: Vec2::splat(4.0).extend(0.0),
-                                ..default()
-                            },
-                            sprite: Sprite {
-                                color: Color::srgb_u8(255, 255, 255),
-                                ..default()
-                            },
-                            texture: decorations_image.clone(),
+                        Transform {
+                            translation: Vec3::new(x, y, get_object_z(y)),
+                            scale: Vec2::splat(4.0).extend(0.0),
                             ..default()
                         },
-                        TextureAtlas {
-                            layout: texture_atlas_handle.clone(),
-                            index:  tomb_rect_1,
+                        Sprite {
+                            color: Color::srgb_u8(255, 255, 255),
+                            texture_atlas: Some(TextureAtlas {
+                                layout: texture_atlas_handle.clone(),
+                                index:  tomb_rect_1,
+                            }),
+                            image: decorations_image.clone(),
+                            ..default()
                         },
                     ))
                     .insert(RenderLayers::from_layers(CAMERA_LAYER_OBJECTS))
@@ -583,22 +567,20 @@ fn setup(
             decorations.push(
                 commands
                     .spawn((
-                        SpriteBundle {
-                            transform: Transform {
-                                translation: Vec3::new(x, y, get_object_z(y)),
-                                scale: Vec2::splat(4.0).extend(0.0),
-                                ..default()
-                            },
-                            sprite: Sprite {
-                                color: Color::srgb_u8(255, 255, 255),
-                                ..default()
-                            },
-                            texture: decorations_image.clone(),
+                        Transform {
+                            translation: Vec3::new(x, y, get_object_z(y)),
+                            scale: Vec2::splat(4.0).extend(0.0),
                             ..default()
                         },
-                        TextureAtlas {
-                            layout: texture_atlas_handle.clone(),
-                            index:  sewerage_rect_1,
+                        Sprite {
+                            color: Color::srgb_u8(255, 255, 255),
+                            texture_atlas: Some(TextureAtlas {
+                                layout: texture_atlas_handle.clone(),
+                                index: sewerage_rect_1,
+                                ..default()
+                            }),
+                            image: decorations_image.clone(),
+                            ..default()
                         },
                     ))
                     .insert(RenderLayers::from_layers(CAMERA_LAYER_FLOOR)) // Add to floor
@@ -608,9 +590,9 @@ fn setup(
         }
     }
     commands
-        .spawn(SpatialBundle::default())
+        .spawn((Transform::default(), Visibility::default()))
         .insert(Name::new("decorations"))
-        .push_children(&decorations);
+        .add_children(&decorations);
 
     // Add lights.
     let mut lights = vec![];
@@ -622,13 +604,13 @@ fn setup(
                            light_source: OmniLightSource2D| {
             cmd.spawn(Name::new(name))
                 .insert(light_source)
-                .insert(SpatialBundle {
-                    transform: Transform {
+                .insert((
+                    Visibility::default(),
+                    Transform {
                         translation: Vec3::new(x, y, 0.0),
                         ..default()
                     },
-                    ..default()
-                })
+                ))
                 .insert(RenderLayers::from_layers(ALL_LAYERS))
                 .id()
         };
@@ -772,31 +754,25 @@ fn setup(
         ));
     }
     commands
-        .spawn(SpatialBundle::default())
+        .spawn((Transform::default(), Visibility::default()))
         .insert(Name::new("lights"))
-        .push_children(&lights);
+        .add_children(&lights);
 
     // Add roofs.
     commands
-        .spawn(SpatialBundle {
-            transform: Transform {
-                translation: Vec3::new(30.0, -180.0, 0.0),
-                ..default()
-            },
-            ..default()
-        })
+        .spawn((
+            Visibility::default(),
+            Transform::from_translation(Vec3::new(30.0, -180.0, 0.0)),
+        ))
         .insert(Name::new("skylight_mask_1"))
         .insert(SkylightMask2D {
             h_size: Vec2::new(430.0, 330.0),
         });
     commands
-        .spawn(SpatialBundle {
-            transform: Transform {
-                translation: Vec3::new(101.6, -989.4, 0.0),
-                ..default()
-            },
-            ..default()
-        })
+        .spawn((
+            Visibility::default(),
+            Transform::from_translation(Vec3::new(101.6, -989.4, 0.0)),
+        ))
         .insert(Name::new("skylight_mask_2"))
         .insert(SkylightMask2D {
             h_size: Vec2::new(163.3, 156.1),
@@ -813,16 +789,15 @@ fn setup(
 
     // Add light source.
     commands
-        .spawn(MaterialMesh2dBundle {
-            mesh: block_mesh.into(),
-            material: materials.add(ColorMaterial::from_color(palettes::basic::YELLOW)),
-            transform: Transform {
+        .spawn((
+            Mesh2d(block_mesh.into()),
+            MeshMaterial2d(materials.add(ColorMaterial::from_color(palettes::basic::YELLOW))),
+            Transform {
                 translation: Vec3::new(0.0, 0.0, 1000.0),
                 scale: Vec3::splat(8.0),
                 ..default()
             },
-            ..default()
-        })
+        ))
         .insert(Name::new("cursor_light"))
         .insert(OmniLightSource2D {
             intensity: 10.0,
@@ -837,21 +812,19 @@ fn setup(
         scale: CAMERA_SCALE,
         near: -2000.0,
         far: 2000.0,
-        ..default()
+        ..OrthographicProjection::default_2d()
     };
 
     // Setup separate camera for floor, walls and objects.
     commands
         .spawn((
-            Camera2dBundle {
-                camera: Camera {
-                    hdr: false,
-                    target: RenderTarget::Image(camera_targets.floor_target.clone()),
-                    ..default()
-                },
-                projection: projection.clone(),
+            Camera2d,
+            Camera {
+                hdr: false,
+                target: RenderTarget::Image(camera_targets.floor_target.clone()),
                 ..default()
             },
+            projection.clone(),
             Name::new("floors_target_camera"),
         ))
         .insert(SpriteCamera)
@@ -859,15 +832,13 @@ fn setup(
         .insert(RenderLayers::from_layers(CAMERA_LAYER_FLOOR));
     commands
         .spawn((
-            Camera2dBundle {
-                camera: Camera {
-                    hdr: false,
-                    target: RenderTarget::Image(camera_targets.walls_target.clone()),
-                    ..default()
-                },
-                projection: projection.clone(),
+            Camera2d,
+            Camera {
+                hdr: false,
+                target: RenderTarget::Image(camera_targets.walls_target.clone()),
                 ..default()
             },
+            projection.clone(),
             Name::new("walls_target_camera"),
         ))
         .insert(SpriteCamera)
@@ -875,15 +846,13 @@ fn setup(
         .insert(RenderLayers::from_layers(CAMERA_LAYER_WALLS));
     commands
         .spawn((
-            Camera2dBundle {
-                camera: Camera {
-                    hdr: false,
-                    target: RenderTarget::Image(camera_targets.objects_target.clone()),
-                    ..default()
-                },
-                projection: projection.clone(),
+            Camera2d,
+            Camera {
+                hdr: false,
+                target: RenderTarget::Image(camera_targets.objects_target.clone()),
                 ..default()
             },
+            projection,
             Name::new("objects_targets_camera"),
         ))
         .insert(SpriteCamera)
@@ -900,7 +869,7 @@ fn system_control_mouse_light(
     keyboard: Res<ButtonInput<KeyCode>>,
 )
 {
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
 
     // We only need to iter over first camera matched.
     let (camera, camera_transform) = query_cameras.iter().next().unwrap();
@@ -919,17 +888,17 @@ fn system_control_mouse_light(
         mouse_transform.translation = mouse_world.truncate().extend(1000.0);
 
         if mouse.just_pressed(MouseButton::Right) {
-            mouse_color.color = Color::srgba(rng.gen(), rng.gen(), rng.gen(), 1.0);
+            mouse_color.color = Color::srgba(rng.random(), rng.random(), rng.random(), 1.0);
         }
         if mouse.just_pressed(MouseButton::Left) && keyboard.pressed(KeyCode::ShiftLeft) {
             commands
-                .spawn(SpatialBundle {
-                    transform: Transform {
+                .spawn((
+                    Visibility::default(),
+                    Transform {
                         translation: mouse_world.truncate().extend(0.0),
                         ..default()
                     },
-                    ..default()
-                })
+                ))
                 .insert(Name::new("point_light"))
                 .insert(RenderLayers::from_layers(ALL_LAYERS))
                 .insert(OmniLightSource2D {
@@ -970,7 +939,8 @@ fn system_camera_zoom(
     mut cameras: Query<&mut OrthographicProjection, With<SpriteCamera>>,
     time: Res<Time>,
     mut scroll_event_reader: EventReader<MouseWheel>,
-) {
+)
+{
     let mut projection_delta = 0.;
 
     for event in scroll_event_reader.read() {
@@ -982,7 +952,7 @@ fn system_camera_zoom(
     }
 
     for mut camera in cameras.iter_mut() {
-        camera.scale = (camera.scale - projection_delta * time.delta_seconds())
+        camera.scale = (camera.scale - projection_delta * time.delta_secs())
             .clamp(CAMERA_SCALE_BOUNDS.0, CAMERA_SCALE_BOUNDS.1);
     }
 }

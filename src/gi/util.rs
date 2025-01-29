@@ -7,19 +7,19 @@ pub struct AssetUtil;
 
 impl AssetUtil
 {
-    pub fn gi(l: &'static str) -> AssetPath
+    pub fn gi(l: &'static str) -> AssetPath<'static>
     {
         AssetPath::parse("gi/target").with_label(l.to_owned())
     }
-    pub fn camera(l: &'static str) -> AssetPath
+    pub fn camera(l: &'static str) -> AssetPath<'static>
     {
         AssetPath::parse("camera/target").with_label(l.to_owned())
     }
-    pub fn material(l: &'static str) -> AssetPath
+    pub fn material(l: &'static str) -> AssetPath<'static>
     {
         AssetPath::parse("material").with_label(l.to_owned())
     }
-    pub fn mesh(l: &'static str) -> AssetPath
+    pub fn mesh(l: &'static str) -> AssetPath<'static>
     {
         AssetPath::parse("mesh").with_label(l.to_owned())
     }
